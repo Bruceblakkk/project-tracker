@@ -1227,10 +1227,32 @@ async function loadProgress() {
   <button onclick="saveProgress(prompt('Date?'), prompt('Task?'), prompt('Progress?'))">
     Save Progress
   </button>
-  <button onclick="loadProgress()">
+  <button onclick="loadProgressAndDisplay()">
     Load Progress
   </button>
 </div>
+
+<!-- Area where progress will be shown -->
+<div id="progressDisplay" style="margin-top: 20px; border: 1px solid #ccc; padding: 10px;">
+  <strong>Progress Data:</strong>
+  <ul id="progressList"></ul>
+</div>
+
+<script>
+async function loadProgressAndDisplay() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
+  const list = document.getElementById("progressList");
+  list.innerHTML = ""; // Clear old results
+
+  // Skip header row if present
+  data.slice(1).forEach(row => {
+    const li = document.createElement("li");
+    li.textContent = `Date: ${row[0]}, Task: ${row[1]}, Progress: ${row[2]}`;
+    list.appendChild(li);
+  });
+}
+</script>
 
 
 </body>
