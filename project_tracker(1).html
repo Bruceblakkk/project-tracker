@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Tracker Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.5);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .project-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .completion-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .in-progress {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        .completed {
+            background: #55efc4;
+            color: #00b894;
+        }
+
+        .progress-section {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .input-group input, .input-group textarea, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #00b894;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #00a085;
+        }
+
+        .btn-secondary {
+            background: #636e72;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3436;
+        }
+
+        .btn-warning {
+            background: #fdcb6e;
+            color: #2d3436;
+        }
+
+        .btn-danger {
+            background: #e17055;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+
+        .tracking-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .tracking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tracking-item:last-child {
+            border-bottom: none;
+        }
+
+        .date-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .items-list {
+            background: #f1f2f6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .sub-project-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .sub-project-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .sub-project-item.completed {
+            border-left-color: #00b894;
+            background: #f0fff4;
+        }
+
+        .sub-project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .sub-project-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .sub-project-title.completed {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .sub-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .sub-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+
+        .sub-progress-fill.completed {
+            background: #00b894;
+        }
+
+        .sub-project-meta {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .progress-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .progress-input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            min-width: 500px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .activity-log {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .activity-entry {
+            font-size: 0.8rem;
+            color: #666;
+            padding: 2px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .activity-entry:last-child {
+            border-bottom: none;
+        }
+
+        .section-toggle {
+            background: transparent;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .collapsible {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible.expanded {
+            max-height: 1000px;
+        }
+
+        @media (max-width: 768px) {
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                min-width: 300px;
+                padding: 20px;
+            }
+
+            .date-input {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .progress-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Project Mastery Tracker</h1>
+            <p>Your comprehensive journey through cybersecurity, data science, and academic excellence</p>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats will be populated by JavaScript -->
+        </div>
+
+        <div class="projects-grid" id="projectsGrid">
+            <!-- Projects will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Modal for adding/editing sub-projects -->
+    <div id="subProjectModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle">Add Sub-Project</h3>
+            <div class="input-group">
+                <label for="subProjectName">Name:</label>
+                <input type="text" id="subProjectName" placeholder="e.g., AWS Solutions Architect">
+            </div>
+            <div class="input-group">
+                <label for="subProjectDescription">Description:</label>
+                <textarea id="subProjectDescription" rows="3" placeholder="Additional details, study materials, etc."></textarea>
+            </div>
+            <div class="input-group">
+                <label for="subProjectType">Type/Category:</label>
+                <input type="text" id="subProjectType" placeholder="e.g., Cloud, Security, Programming">
+            </div>
+            <div class="input-group">
+                <label for="subProjectTarget">Target Progress (0-100%):</label>
+                <input type="number" id="subProjectTarget" min="0" max="100" value="100">
+            </div>
+            <div class="input-group">
+                <label for="subProjectDeadline">Target Completion Date:</label>
+                <input type="date" id="subProjectDeadline">
+            </div>
+            <button class="btn btn-primary" onclick="saveSubProject()">Save Sub-Project</button>
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced project data structure with sub-projects
+        let projects = {
+            htbMachines: {
+                title: "HTB Retired Machines",
+                category: "Penetration Testing",
+                subProjects: [],
+                activity: []
+            },
+            enumStrategies: {
+                title: "Cyber Enumeration Strategies", 
+                category: "Methodology",
+                subProjects: [],
+                activity: []
+            },
+            cloudCerts: {
+                title: "Cloud Certificates",
+                category: "Certifications",
+                subProjects: [],
+                activity: []
+            },
+            dataScienceCerts: {
+                title: "Data Science Certificates",
+                category: "Certifications", 
+                subProjects: [],
+                activity: []
+            },
+            cyberSecCerts: {
+                title: "Cyber Security Certificates",
+                category: "Certifications",
+                subProjects: [],
+                activity: []
+            },
+            mitreAttack: {
+                title: "MITRE ATT&CK Techniques",
+                category: "Framework Study",
+                subProjects: [],
+                activity: []
+            },
+            htbADPath: {
+                title: "HTB AD Penetration Tester Path",
+                category: "Learning Path",
+                subProjects: [],
+                activity: []
+            },
+            htbWebPath: {
+                title: "HTB Senior Web Penetration Tester Path", 
+                category: "Learning Path",
+                subProjects: [],
+                activity: []
+            },
+            mastersDissertation: {
+                title: "Master's Dissertation",
+                category: "Academic",
+                subProjects: [],
+                activity: []
+            },
+            leetcode: {
+                title: "LeetCode Challenges",
+                category: "Programming",
+                subProjects: [],
+                activity: []
+            },
+            kaggleProjects: {
+                title: "Kaggle Data Science Projects",
+                category: "Data Science", 
+                subProjects: [],
+                activity: []
+            }
+        };
+
+        // Current modal state
+        let currentProject = null;
+        let editingSubProject = null;
+
+        // Load data from memory (since localStorage is not available)
+        function loadData() {
+            // Data persists in memory during the session
+            // In a real environment, you'd load from localStorage or a database
+        }
+
+        // Save data to memory
+        function saveData() {
+            // In a real environment, you'd save to localStorage or a database
+            console.log('Data saved to memory');
+        }
+
+        // Initialize the application
+        function init() {
+            loadData();
+            renderStats();
+            renderProjects();
+        }
+
+        // Calculate project statistics
+        function calculateProjectStats(project) {
+            if (!project.subProjects || project.subProjects.length === 0) {
+                return { total: 0, completed: 0, inProgress: 0, percentage: 0 };
+            }
+
+            const total = project.subProjects.length;
+            const completed = project.subProjects.filter(sp => sp.progress === 100).length;
+            const inProgress = project.subProjects.filter(sp => sp.progress > 0 && sp.progress < 100).length;
+            const totalProgress = project.subProjects.reduce((sum, sp) => sum + sp.progress, 0);
+            const percentage = total > 0 ? Math.round(totalProgress / total) : 0;
+
+            return { total, completed, inProgress, percentage };
+        }
+
+        // Render statistics
+        function renderStats() {
+            const statsGrid = document.getElementById('statsGrid');
+            const totalProjects = Object.keys(projects).length;
+            
+            let totalSubProjects = 0;
+            let completedSubProjects = 0;
+            let totalProgress = 0;
+
+            Object.values(projects).forEach(project => {
+                const stats = calculateProjectStats(project);
+                totalSubProjects += stats.total;
+                completedSubProjects += stats.completed;
+                totalProgress += stats.percentage;
+            });
+
+            const overallProgress = totalProjects > 0 ? Math.round(totalProgress / totalProjects) : 0;
+
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${totalProjects}</div>
+                    <div>Main Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${totalSubProjects}</div>
+                    <div>Sub-Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${completedSubProjects}</div>
+                    <div>Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${overallProgress}%</div>
+                    <div>Overall Progress</div>
+                </div>
+            `;
+        }
+
+        // Render projects
+        function renderProjects() {
+            const projectsGrid = document.getElementById('projectsGrid');
+            projectsGrid.innerHTML = '';
+
+            Object.entries(projects).forEach(([key, project]) => {
+                const stats = calculateProjectStats(project);
+                const isCompleted = stats.percentage === 100;
+
+                const projectCard = document.createElement('div');
+                projectCard.className = 'project-card';
+                projectCard.innerHTML = `
+                    <div class="project-header">
+                        <div>
+                            <div class="project-title">${project.title}</div>
+                            <small style="color: #666;">${project.category}</small>
+                        </div>
+                        <div class="completion-badge ${isCompleted ? 'completed' : 'in-progress'}">
+                            ${isCompleted ? 'Completed' : 'In Progress'}
+                        </div>
+                    </div>
+                    
+                    <div class="progress-section">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${stats.percentage}%"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span>${stats.completed} / ${stats.total} completed</span>
+                            <span>${stats.percentage}%</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">
+                            ${stats.inProgress} in progress
+                        </div>
+                    </div>
+
+                    <div class="tracking-section">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <strong>Sub-Projects (${stats.total})</strong>
+                            <button class="btn btn-primary btn-small" onclick="openAddSubProjectModal('${key}')">
+                                Add ${getSubProjectLabel(key)}
+                            </button>
+                        </div>
+                        
+                        <div class="items-list">
+                            ${renderSubProjects(project.subProjects, key)}
+                        </div>
+                    </div>
+
+                    <div class="tracking-section collapsible ${project.showActivity ? 'expanded' : ''}" id="activity-section-${key}">
+                        <div style="display: flex; justify-content: between; align-items: center;">
+                            <strong>Recent Activity</strong>
+                            <button class="section-toggle" onclick="toggleSection('activity-section-${key}', '${key}', 'showActivity')">
+                                ${project.showActivity ? 'Hide' : 'Show'}
+                            </button>
+                        </div>
+                        <div class="activity-log">
+                            ${renderRecentActivity(project)}
+                        </div>
+                    </div>
+                `;
+
+                projectsGrid.appendChild(projectCard);
+            });
+        }
+
+        // Get appropriate label for sub-project based on main project type
+        function getSubProjectLabel(projectKey) {
+            const labels = {
+                htbMachines: "Machine",
+                enumStrategies: "Strategy", 
+                cloudCerts: "Certificate",
+                dataScienceCerts: "Certificate",
+                cyberSecCerts: "Certificate", 
+                mitreAttack: "Technique",
+                htbADPath: "Module",
+                htbWebPath: "Module",
+                mastersDissertation: "Chapter",
+                leetcode: "Challenge Set",
+                kaggleProjects: "Project"
+            };
+            return labels[projectKey] || "Item";
+        }
+
+        // Render sub-projects
+        function renderSubProjects(subProjects, projectKey) {
+            if (!subProjects || subProjects.length === 0) {
+                return '<p style="text-align: center; color: #999; margin: 20px 0;">No sub-projects added yet</p>';
+            }
+
+            return subProjects.map((subProject, index) => {
+                const isCompleted = subProject.progress === 100;
+                const daysUntilDeadline = subProject.deadline ? 
+                    Math.ceil((new Date(subProject.deadline) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+                
+                return `
+                    <div class="sub-project-item ${isCompleted ? 'completed' : ''}">
+                        <div class="sub-project-header">
+                            <div class="sub-project-title ${isCompleted ? 'completed' : ''}">
+                                ${subProject.name}
+                                ${subProject.type ? `<span style="font-size: 0.8rem; color: #667eea; font-weight: normal;"> (${subProject.type})</span>` : ''}
+                            </div>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn btn-secondary btn-small" onclick="editSubProject('${projectKey}', ${index})">Edit</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteSubProject('${projectKey}', ${index})">Delete</button>
+                            </div>
+                        </div>
+                        
+                        <div class="sub-progress-bar">
+                            <div class="sub-progress-fill ${isCompleted ? 'completed' : ''}" style="width: ${subProject.progress}%"></div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 8px 0;">
+                            <span style="font-size: 0.9rem; font-weight: 600;">${subProject.progress}% Complete</span>
+                            ${daysUntilDeadline !== null ? 
+                                `<span style="font-size: 0.8rem; color: ${daysUntilDeadline < 0 ? '#e17055' : daysUntilDeadline < 7 ? '#fdcb6e' : '#636e72'};">
+                                    ${daysUntilDeadline < 0 ? `${Math.abs(daysUntilDeadline)} days overdue` : 
+                                      daysUntilDeadline === 0 ? 'Due today' : 
+                                      `${daysUntilDeadline} days left`}
+                                </span>` : ''}
+                        </div>
+
+                        ${subProject.description ? `<div style="font-size: 0.85rem; color: #666; margin: 8px 0;">${subProject.description}</div>` : ''}
+                        
+                        <div class="progress-controls">
+                            <input type="number" class="progress-input" id="progress-${projectKey}-${index}" 
+                                   value="${subProject.progress}" min="0" max="100" 
+                                   onchange="updateSubProjectProgress('${projectKey}', ${index}, this.value)">
+                            <span style="font-size: 0.8rem; color: #666;">%</span>
+                            <button class="btn btn-success btn-small" onclick="completeSubProject('${projectKey}', ${index})">
+                                ${isCompleted ? 'Mark Incomplete' : 'Mark Complete'}
+                            </button>
+                            <button class="btn btn-warning btn-small" onclick="logActivity('${projectKey}', ${index})">Log Progress</button>
+                        </div>
+
+                        <div class="sub-project-meta">
+                            Added: ${new Date(subProject.dateAdded).toLocaleDateString()}
+                            ${subProject.lastUpdated ? `• Updated: ${new Date(subProject.lastUpdated).toLocaleDateString()}` : ''}
+                        </div>
+
+                        ${subProject.activity && subProject.activity.length > 0 ? `
+                            <div class="activity-log">
+                                <strong style="font-size: 0.8rem;">Recent Activity:</strong>
+                                ${subProject.activity.slice(-3).map(activity => `
+                                    <div class="activity-entry">
+                                        ${new Date(activity.date).toLocaleDateString()}: ${activity.description}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render recent activity
+        function renderRecentActivity(project) {
+            if (!project.activity || project.activity.length === 0) {
+                return '<p style="text-align: center; color: #999; margin: 10px 0;">No recent activity</p>';
+            }
+
+            return project.activity
+                .slice(-10)
+                .reverse()
+                .map(activity => `
+                    <div class="activity-entry">
+                        <strong>${new Date(activity.date).toLocaleDateString()}</strong>: ${activity.description}
+                    </div>
+                `).join('');
+        }
+
+        // Modal functions
+        function openAddSubProjectModal(projectKey) {
+            currentProject = projectKey;
+            editingSubProject = null;
+            document.getElementById('modalTitle').textContent = `Add ${getSubProjectLabel(projectKey)} to ${projects[projectKey].title}`;
+            
+            // Clear form
+            document.getElementById('subProjectName').value = '';
+            document.getElementById('subProjectDescription').value = '';
+            document.getElementById('subProjectType').value = '';
+            document.getElementById('subProjectTarget').value = '100';
+            document.getElementById('subProjectDeadline').value = '';
+            
+            document.getElementById('subProjectModal').style.display = 'block';
+        }
+
+        function editSubProject(projectKey, index) {
+            currentProject = projectKey;
+            editingSubProject = index;
+            const subProject = projects[projectKey].subProjects[index];
+            
+            document.getElementById('modalTitle').textContent = `Edit ${subProject.name}`;
+            document.getElementById('subProjectName').value = subProject.name;
+            document.getElementById('subProjectDescription').value = subProject.description || '';
+            document.getElementById('subProjectType').value = subProject.type || '';
+            document.getElementById('subProjectTarget').value = subProject.targetProgress || 100;
+            document.getElementById('subProjectDeadline').value = subProject.deadline || '';
+            
+            document.getElementById('subProjectModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('subProjectModal').style.display = 'none';
+            currentProject = null;
+            editingSubProject = null;
+        }
+
+        function saveSubProject() {
+            if (!currentProject) return;
+
+            const name = document.getElementById('subProjectName').value.trim();
+            const description = document.getElementById('subProjectDescription').value.trim();
+            const type = document.getElementById('subProjectType').value.trim();
+            const targetProgress = parseInt(document.getElementById('subProjectTarget').value) || 100;
+            const deadline = document.getElementById('subProjectDeadline').value;
+
+            if (!name) {
+                alert('Please enter a name for the sub-project');
+                return;
+            }
+
+            const subProjectData = {
+                name: name,
+                description: description,
+                type: type,
+                targetProgress: targetProgress,
+                deadline: deadline,
+                progress: 0,
+                dateAdded: new Date().toISOString(),
+                lastUpdated: new Date().toISOString(),
+                activity: []
+            };
+
+            if (editingSubProject !== null) {
+                // Editing existing sub-project
+                const existingSubProject = projects[currentProject].subProjects[editingSubProject];
+                projects[currentProject].subProjects[editingSubProject] = {
+                    ...existingSubProject,
+                    ...subProjectData,
+                    dateAdded: existingSubProject.dateAdded, // Keep original date
+                    progress: existingSubProject.progress, // Keep existing progress
+                    activity: existingSubProject.activity // Keep existing activity
+                };
+                
+                // Log the edit
+                addActivity(currentProject, `Updated sub-project: ${name}`);
+            } else {
+                // Adding new sub-project
+                if (!projects[currentProject].subProjects) {
+                    projects[currentProject].subProjects = [];
+                }
+                
+                projects[currentProject].subProjects.push(subProjectData);
+                addActivity(currentProject, `Added new sub-project: ${name}`);
+            }
+
+            saveData();
+            renderStats();
+            renderProjects();
+            closeModal();
+        }
+
+        function updateSubProjectProgress(projectKey, index, newProgress) {
+            const progress = Math.max(0, Math.min(100, parseInt(newProgress) || 0));
+            const subProject = projects[projectKey].subProjects[index];
+            const oldProgress = subProject.progress;
+            
+            subProject.progress = progress;
+            subProject.lastUpdated = new Date().toISOString();
+            
+            // Log progress update
+            if (!subProject.activity) subProject.activity = [];
+            subProject.activity.push({
+                date: new Date().toISOString(),
+                description: `Progress updated from ${oldProgress}% to ${progress}%`,
+                type: 'progress'
+            });
+            
+            addActivity(projectKey, `${subProject.name}: ${oldProgress}% → ${progress}%`);
+            
+            saveData();
+            renderStats();
+            renderProjects();
+        }
+
+        function completeSubProject(projectKey, index) {
+            const subProject = projects[projectKey].subProjects[index];
+            const newProgress = subProject.progress === 100 ? 0 : 100;
+            
+            subProject.progress = newProgress;
+            subProject.lastUpdated = new Date().toISOString();
+            
+            // Log completion/incompletion
+            if (!subProject.activity) subProject.activity = [];
+            subProject.activity.push({
+                date: new Date().toISOString(),
+                description: newProgress === 100 ? 'Marked as complete' : 'Marked as incomplete',
+                type: newProgress === 100 ? 'completion' : 'reopen'
+            });
+            
+            addActivity(projectKey, `${subProject.name}: ${newProgress === 100 ? 'Completed' : 'Reopened'}`);
+            
+            saveData();
+            renderStats();
+            renderProjects();
+        }
+
+        function deleteSubProject(projectKey, index) {
+            const subProject = projects[projectKey].subProjects[index];
+            if (confirm(`Are you sure you want to delete "${subProject.name}"?`)) {
+                projects[projectKey].subProjects.splice(index, 1);
+                addActivity(projectKey, `Deleted sub-project: ${subProject.name}`);
+                
+                saveData();
+                renderStats();
+                renderProjects();
+            }
+        }
+
+        function logActivity(projectKey, index) {
+            const subProject = projects[projectKey].subProjects[index];
+            const description = prompt(`Log activity for "${subProject.name}":`, '');
+            
+            if (description && description.trim()) {
+                if (!subProject.activity) subProject.activity = [];
+                subProject.activity.push({
+                    date: new Date().toISOString(),
+                    description: description.trim(),
+                    type: 'manual'
+                });
+                
+                subProject.lastUpdated = new Date().toISOString();
+                addActivity(projectKey, `${subProject.name}: ${description.trim()}`);
+                
+                saveData();
+                renderProjects();
+            }
+        }
+
+        function addActivity(projectKey, description) {
+            if (!projects[projectKey].activity) {
+                projects[projectKey].activity = [];
+            }
+            
+            projects[projectKey].activity.push({
+                date: new Date().toISOString(),
+                description: description
+            });
+            
+            // Keep only last 50 activities
+            if (projects[projectKey].activity.length > 50) {
+                projects[projectKey].activity = projects[projectKey].activity.slice(-50);
+            }
+        }
+
+        function toggleSection(sectionId, projectKey, property) {
+            const section = document.getElementById(sectionId);
+            const isExpanded = section.classList.contains('expanded');
+            
+            if (isExpanded) {
+                section.classList.remove('expanded');
+                projects[projectKey][property] = false;
+            } else {
+                section.classList.add('expanded');
+                projects[projectKey][property] = true;
+            }
+            
+            saveData();
+            renderProjects();
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('subProjectModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Bulk import functionality
+        function bulkImportSubProjects(projectKey) {
+            const items = prompt(`Enter ${getSubProjectLabel(projectKey).toLowerCase()}s to import (one per line):`);
+            if (!items) return;
+            
+            const lines = items.split('\n').filter(line => line.trim());
+            let imported = 0;
+            
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (trimmed) {
+                    const subProjectData = {
+                        name: trimmed,
+                        description: '',
+                        type: '',
+                        targetProgress: 100,
+                        deadline: '',
+                        progress: 0,
+                        dateAdded: new Date().toISOString(),
+                        lastUpdated: new Date().toISOString(),
+                        activity: []
+                    };
+                    
+                    if (!projects[projectKey].subProjects) {
+                        projects[projectKey].subProjects = [];
+                    }
+                    
+                    projects[projectKey].subProjects.push(subProjectData);
+                    imported++;
+                }
+            });
+            
+            if (imported > 0) {
+                addActivity(projectKey, `Bulk imported ${imported} sub-projects`);
+                saveData();
+                renderStats();
+                renderProjects();
+                alert(`Successfully imported ${imported} sub-projects!`);
+            }
+        }
+
+        // Export/Import data functionality
+        function exportData() {
+            const dataStr = JSON.stringify(projects, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'project-tracker-data.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const importedData = JSON.parse(e.target.result);
+                            if (confirm('This will replace all current data. Are you sure?')) {
+                                projects = importedData;
+                                saveData();
+                                renderStats();
+                                renderProjects();
+                                alert('Data imported successfully!');
+                            }
+                        } catch (error) {
+                            alert('Error importing data: ' + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Escape to close modal
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+            
+            // Ctrl+S to save (export data)
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                exportData();
+            }
+        });
+
+        // Add bulk import buttons to each project
+        function addBulkImportButtons() {
+            // This would be called after rendering projects to add bulk import functionality
+            Object.keys(projects).forEach(projectKey => {
+                const projectCard = document.querySelector(`[data-project="${projectKey}"]`);
+                if (projectCard) {
+                    const bulkImportBtn = document.createElement('button');
+                    bulkImportBtn.className = 'btn btn-secondary btn-small';
+                    bulkImportBtn.textContent = 'Bulk Import';
+                    bulkImportBtn.onclick = () => bulkImportSubProjects(projectKey);
+                    
+                    const addButton = projectCard.querySelector('.btn-primary');
+                    if (addButton) {
+                        addButton.parentNode.insertBefore(bulkImportBtn, addButton);
+                    }
+                }
+            });
+        }
+
+        // Search and filter functionality
+        function filterProjects(searchTerm) {
+            const projectCards = document.querySelectorAll('.project-card');
+            projectCards.forEach(card => {
+                const projectTitle = card.querySelector('.project-title').textContent.toLowerCase();
+                const subProjects = card.querySelectorAll('.sub-project-title');
+                let hasMatch = projectTitle.includes(searchTerm.toLowerCase());
+                
+                if (!hasMatch) {
+                    subProjects.forEach(sp => {
+                        if (sp.textContent.toLowerCase().includes(searchTerm.toLowerCase())) {
+                            hasMatch = true;
+                        }
+                    });
+                }
+                
+                card.style.display = hasMatch ? 'block' : 'none';
+            });
+        }
+
+        // Initialize the application
+        init();
+
+        // Add sample data for demonstration
+        function addSampleData() {
+            // Add some sample certificates
+            if (projects.cloudCerts.subProjects.length === 0) {
+                const sampleCloudCerts = [
+                    { name: "AWS Solutions Architect Associate", type: "AWS", progress: 0 },
+                    { name: "Azure Fundamentals", type: "Microsoft", progress: 25 },
+                    { name: "Google Cloud Professional", type: "Google", progress: 0 }
+                ];
+                
+                sampleCloudCerts.forEach(cert => {
+                    projects.cloudCerts.subProjects.push({
+                        ...cert,
+                        description: `${cert.type} certification for cloud computing`,
+                        targetProgress: 100,
+                        deadline: '',
+                        dateAdded: new Date().toISOString(),
+                        lastUpdated: new Date().toISOString(),
+                        activity: []
+                    });
+                });
+            }
+            
+            // Add some sample HTB machines
+            if (projects.htbMachines.subProjects.length === 0) {
+                const sampleMachines = [
+                    { name: "Lame", type: "Linux", progress: 100 },
+                    { name: "Legacy", type: "Windows", progress: 75 },
+                    { name: "Blue", type: "Windows", progress: 0 }
+                ];
+                
+                sampleMachines.forEach(machine => {
+                    projects.htbMachines.subProjects.push({
+                        ...machine,
+                        description: `${machine.type} machine - ${machine.name}`,
+                        targetProgress: 100,
+                        deadline: '',
+                        dateAdded: new Date().toISOString(),
+                        lastUpdated: new Date().toISOString(),
+                        activity: []
+                    });
+                });
+            }
+            
+            renderStats();
+            renderProjects();
+        }
+
+        // Uncomment the line below to add sample data
+        // addSampleData();
+    </script>
+</body>
+</html>
