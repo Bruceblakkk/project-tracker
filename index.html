@@ -41,6 +41,80 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
+        .sync-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .sync-status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .sync-status.success {
+            background: rgba(0, 184, 148, 0.3);
+            color: #00b894;
+        }
+
+        .sync-status.error {
+            background: rgba(225, 112, 85, 0.3);
+            color: #e17055;
+        }
+
+        .sync-status.loading {
+            background: rgba(253, 203, 110, 0.3);
+            color: #fdcb6e;
+        }
+
+        .btn-sync {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-sync:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.4);
+        }
+
+        .btn-sync:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .api-config {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .api-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin-top: 5px;
+        }
+
+        .api-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -445,6 +519,36 @@
         <div class="header">
             <h1>🎯 Project Mastery Tracker</h1>
             <p>Your comprehensive journey through cybersecurity, data science, and academic excellence</p>
+            
+            <div class="sync-controls">
+                <button class="btn-sync" onclick="saveToCloud()" id="saveBtn">
+                    📤 Save to Cloud
+                </button>
+                <button class="btn-sync" onclick="loadFromCloud()" id="loadBtn">
+                    📥 Load from Cloud
+                </button>
+                <button class="btn btn-secondary" onclick="toggleApiConfig()" id="configBtn">
+                    ⚙️ API Config
+                </button>
+                <button class="btn btn-secondary" onclick="exportData()">
+                    💾 Export JSON
+                </button>
+                <button class="btn btn-secondary" onclick="importData()">
+                    📁 Import JSON
+                </button>
+            </div>
+
+            <div id="syncStatus" class="sync-status" style="display: none;"></div>
+
+            <div id="apiConfig" class="api-config" style="display: none;">
+                <label style="color: white; font-weight: bold;">Google Sheets Web App URL:</label>
+                <input type="text" id="apiUrl" class="api-input" 
+                       placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"
+                       value="">
+                <div style="font-size: 0.8rem; color: rgba(255,255,255,0.8); margin-top: 5px;">
+                    Enter your Google Apps Script web app URL here to enable cloud sync
+                </div>
+            </div>
         </div>
 
         <div class="stats-grid" id="statsGrid">
@@ -1149,6 +1253,235 @@
         // Initialize the application
         init();
 
+        // Google Sheets API Integration
+        let API_URL = "";
+
+        // Load API URL from memory
+        function loadApiConfig() {
+            // In a real environment, this would load from localStorage
+            const savedUrl = ""; // localStorage.getItem('apiUrl') || "";
+            API_URL = savedUrl;
+            const apiInput = document.getElementById('apiUrl');
+            if (apiInput) {
+                apiInput.value = savedUrl;
+            }
+        }
+
+        // Save API URL to memory
+        function saveApiConfig() {
+            const apiInput = document.getElementById('apiUrl');
+            if (apiInput) {
+                API_URL = apiInput.value;
+                // In a real environment: localStorage.setItem('apiUrl', API_URL);
+                showStatus('API URL saved successfully', 'success');
+            }
+        }
+
+        // Toggle API configuration panel
+        function toggleApiConfig() {
+            const apiConfig = document.getElementById('apiConfig');
+            const isVisible = apiConfig.style.display !== 'none';
+            apiConfig.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                loadApiConfig();
+            } else {
+                saveApiConfig();
+            }
+        }
+
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('syncStatus');
+            statusEl.textContent = message;
+            statusEl.className = `sync-status ${type}`;
+            statusEl.style.display = 'block';
+            
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Save data to Google Sheets
+        async function saveToCloud() {
+            if (!API_URL) {
+                showStatus('Please configure API URL first', 'error');
+                toggleApiConfig();
+                return;
+            }
+
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            showStatus('Saving to cloud...', 'loading');
+
+            try {
+                // Prepare data for cloud storage
+                const cloudData = {
+                    timestamp: new Date().toISOString(),
+                    projects: projects,
+                    totalProjects: Object.keys(projects).length,
+                    totalSubProjects: Object.values(projects).reduce((sum, p) => sum + (p.subProjects?.length || 0), 0),
+                    completedSubProjects: Object.values(projects).reduce((sum, p) => 
+                        sum + (p.subProjects?.filter(sp => sp.progress === 100).length || 0), 0)
+                };
+
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: 'save',
+                        data: cloudData
+                    }),
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Save result:', result);
+                showStatus('Successfully saved to cloud!', 'success');
+
+            } catch (error) {
+                console.error('Save error:', error);
+                showStatus(`Save failed: ${error.message}`, 'error');
+            } finally {
+                saveBtn.disabled = false;
+            }
+        }
+
+        // Load data from Google Sheets
+        async function loadFromCloud() {
+            if (!API_URL) {
+                showStatus('Please configure API URL first', 'error');
+                toggleApiConfig();
+                return;
+            }
+
+            const loadBtn = document.getElementById('loadBtn');
+            loadBtn.disabled = true;
+            showStatus('Loading from cloud...', 'loading');
+
+            try {
+                const response = await fetch(`${API_URL}?action=load`, {
+                    method: "GET",
+                    headers: { 
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Loaded data:', data);
+
+                if (data && data.projects) {
+                    if (confirm('This will replace all current data with cloud data. Continue?')) {
+                        projects = data.projects;
+                        saveData();
+                        renderStats();
+                        renderProjects();
+                        showStatus('Successfully loaded from cloud!', 'success');
+                    }
+                } else {
+                    showStatus('No data found in cloud storage', 'error');
+                }
+
+            } catch (error) {
+                console.error('Load error:', error);
+                showStatus(`Load failed: ${error.message}`, 'error');
+            } finally {
+                loadBtn.disabled = false;
+            }
+        }
+
+        // Enhanced save progress function for individual items
+        async function saveProgress(date, task, progress, projectKey = '', subProjectIndex = -1) {
+            if (!API_URL) return;
+
+            try {
+                const progressData = {
+                    date: date,
+                    task: task,
+                    progress: progress,
+                    projectKey: projectKey,
+                    subProjectIndex: subProjectIndex,
+                    timestamp: new Date().toISOString()
+                };
+
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: 'saveProgress',
+                        data: progressData
+                    }),
+                    headers: { "Content-Type": "application/json" }
+                });
+
+                const result = await response.json();
+                console.log('Progress saved:', result);
+
+            } catch (error) {
+                console.error('Progress save error:', error);
+            }
+        }
+
+        // Load individual progress entries
+        async function loadProgress() {
+            if (!API_URL) return [];
+
+            try {
+                const response = await fetch(`${API_URL}?action=loadProgress`);
+                const data = await response.json();
+                console.log('Progress data loaded:', data);
+                return data || [];
+
+            } catch (error) {
+                console.error('Progress load error:', error);
+                return [];
+            }
+        }
+
+        // Auto-save progress when sub-projects are updated
+        function autoSaveProgress(projectKey, subProjectIndex, description) {
+            const today = new Date().toISOString().split('T')[0];
+            const subProject = projects[projectKey].subProjects[subProjectIndex];
+            const task = `${projects[projectKey].title} - ${subProject.name}`;
+            
+            saveProgress(today, task, subProject.progress, projectKey, subProjectIndex);
+        }
+
+        // Enhanced update functions with auto-save
+        const originalUpdateSubProjectProgress = updateSubProjectProgress;
+        updateSubProjectProgress = function(projectKey, index, newProgress) {
+            originalUpdateSubProjectProgress(projectKey, index, newProgress);
+            autoSaveProgress(projectKey, index, 'Progress updated');
+        };
+
+        const originalCompleteSubProject = completeSubProject;
+        completeSubProject = function(projectKey, index) {
+            originalCompleteSubProject(projectKey, index);
+            autoSaveProgress(projectKey, index, 'Completion status changed');
+        };
+
+        const originalLogActivity = logActivity;
+        logActivity = function(projectKey, index) {
+            originalLogActivity(projectKey, index);
+            autoSaveProgress(projectKey, index, 'Activity logged');
+        };
+
+        // Initialize API configuration on load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadApiConfig();
+        });
+
         // Add sample data for demonstration
         function addSampleData() {
             // Add some sample certificates
@@ -1200,60 +1533,5 @@
         // Uncomment the line below to add sample data
         // addSampleData();
     </script>
-    <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbybLknKEsAZL8lOjWQtrSGwG7uUJEEqwV1fVfmoMps4j_r2SUdzvX3SmaBBAGOsu9Ryqw/exec";
-
-// Save data
-async function saveProgress(date, task, progress) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({ date, task, progress }),
-    headers: { "Content-Type": "application/json" }
-  });
-  const result = await res.json();
-  console.log(result);
-}
-
-// Load data
-async function loadProgress() {
-  const res = await fetch(API_URL);
-  const data = await res.json();
-  console.log(data); // Array of rows from Google Sheets
-}
-</script>
-
-<!-- Buttons for saving and loading progress -->
-<div style="margin-top: 20px;">
-  <button onclick="saveProgress(prompt('Date?'), prompt('Task?'), prompt('Progress?'))">
-    Save Progress
-  </button>
-  <button onclick="loadProgressAndDisplay()">
-    Load Progress
-  </button>
-</div>
-
-<!-- Area where progress will be shown -->
-<div id="progressDisplay" style="margin-top: 20px; border: 1px solid #ccc; padding: 10px;">
-  <strong>Progress Data:</strong>
-  <ul id="progressList"></ul>
-</div>
-
-<script>
-async function loadProgressAndDisplay() {
-  const res = await fetch(API_URL);
-  const data = await res.json();
-  const list = document.getElementById("progressList");
-  list.innerHTML = ""; // Clear old results
-
-  // Skip header row if present
-  data.slice(1).forEach(row => {
-    const li = document.createElement("li");
-    li.textContent = `Date: ${row[0]}, Task: ${row[1]}, Progress: ${row[2]}`;
-    list.appendChild(li);
-  });
-}
-</script>
-
-
 </body>
 </html>
