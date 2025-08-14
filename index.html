@@ -1222,5 +1222,16 @@ async function loadProgress() {
 }
 </script>
 
+<!-- Buttons for saving and loading progress -->
+<div style="margin-top: 20px;">
+  <button onclick="saveProgress(prompt('Date?'), prompt('Task?'), prompt('Progress?'))">
+    Save Progress
+  </button>
+  <button onclick="loadProgress()">
+    Load Progress
+  </button>
+</div>
+
+
 </body>
 </html>
